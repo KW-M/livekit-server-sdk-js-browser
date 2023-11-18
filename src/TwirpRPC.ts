@@ -37,12 +37,14 @@ export class TwirpRpc {
   request(service: string, method: string, data: any, headers?: any): Promise<any> {
     return new Promise<any>((resolve, reject) => {
       const path = `${this.prefix}/${this.pkg}.${service}/${method}`;
-      this.instance
-        .post(path, data, { headers })
-        .then((res) => {
-          resolve(camelcaseKeys(res.data, { deep: true }));
-        })
-        .catch(reject);
+      Promise.resolve(headers).then((trueHeaders) => {
+        this.instance
+          .post(path, data, { headers: trueHeaders })
+          .then((res: any) => {
+            resolve(camelcaseKeys(res.data, { deep: true }));
+          })
+          .catch(reject);
+      });
     });
   }
 }

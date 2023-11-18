@@ -1,4 +1,4 @@
-import * as jwt from 'jsonwebtoken';
+import { SignJWT, jwtVerify, JWTPayload } from 'jose';
 import { ClaimGrants, VideoGrant } from './grants';
 
 // 6 hours
@@ -46,20 +46,13 @@ export class AccessToken {
    */
   constructor(apiKey?: string, apiSecret?: string, options?: AccessTokenOptions) {
     if (!apiKey) {
-      apiKey = process.env.LIVEKIT_API_KEY;
+      // apiKey = process.env.LIVEKIT_API_KEY;
     }
     if (!apiSecret) {
-      apiSecret = process.env.LIVEKIT_API_SECRET;
+      // apiSecret = process.env.LIVEKIT_API_SECRET;
     }
     if (!apiKey || !apiSecret) {
       throw Error('api-key and api-secret must be set');
-    } else if (typeof document !== 'undefined') {
-      // check against document rather than window because deno provides window
-      console.error(
-        'You should not include your API secret in your web client bundle.\n\n' +
-          'Your web client should request a token from your backend server which should then use ' +
-          'the API secret to generate a token. See https://docs.livekit.io/client/connect/',
-      );
     }
 
     this.apiKey = apiKey;
@@ -105,21 +98,24 @@ export class AccessToken {
   /**
    * @returns JWT encoded token
    */
-  toJwt(): string {
+  async toJwt(): Promise<string> {
     // TODO: check for video grant validity
 
-    const opts: jwt.SignOptions = {
-      issuer: this.apiKey,
-      expiresIn: this.ttl,
-      notBefore: 0,
-    };
+    // seconds since epoch:
+    const s = Math.round(new Date().getTime() / 1000);
+    const jwt = new SignJWT(this.grants as JWTPayload);
+    jwt.setProtectedHeader({ alg: 'HS256' });
+    jwt.setExpirationTime(typeof this.ttl === typeof 0 ? s + (this.ttl as number) : (this.ttl as string | Date));
+    jwt.setIssuer(this.apiKey);
+    jwt.setNotBefore(s);
+
     if (this.identity) {
-      opts.subject = this.identity;
-      opts.jwtid = this.identity;
+      jwt.setSubject(this.identity);
+      jwt.setJti(this.identity);
     } else if (this.grants.video?.roomJoin) {
       throw Error('identity is required for join but not set');
     }
-    return jwt.sign(this.grants, this.apiSecret, opts);
+    return jwt.sign(new TextEncoder().encode(this.apiSecret));
   }
 }
 
@@ -133,12 +129,15 @@ export class TokenVerifier {
     this.apiSecret = apiSecret;
   }
 
-  verify(token: string): ClaimGrants {
-    const decoded = jwt.verify(token, this.apiSecret, { issuer: this.apiKey });
-    if (!decoded) {
+  async verify(token: string): Promise<ClaimGrants> {
+    const decoded = await jwtVerify(token, new TextEncoder().encode(this.apiSecret), {
+      issuer: this.apiKey,
+    });
+
+    if (!decoded || !decoded.payload) {
       throw Error('invalid token');
     }
 
-    return decoded as ClaimGrants;
+    return decoded.payload as ClaimGrants;
   }
 }

@@ -800,7 +800,6 @@ export interface SegmentsInfo {
   segmentCount?: number | undefined;
   startedAt?: number | undefined;
   endedAt?: number | undefined;
-  dataEventLocation?: string | undefined;
 }
 
 export interface ImagesInfo {
@@ -4766,7 +4765,6 @@ function createBaseSegmentsInfo(): SegmentsInfo {
     segmentCount: 0,
     startedAt: 0,
     endedAt: 0,
-    dataEventLocation: "",
   };
 }
 
@@ -4798,9 +4796,6 @@ export const SegmentsInfo = {
     }
     if (message.endedAt !== undefined && message.endedAt !== 0) {
       writer.uint32(56).int64(message.endedAt);
-    }
-    if (message.dataEventLocation !== undefined && message.dataEventLocation !== "") {
-      writer.uint32(82).string(message.dataEventLocation);
     }
     return writer;
   },
@@ -4875,13 +4870,6 @@ export const SegmentsInfo = {
 
           message.endedAt = longToNumber(reader.int64() as Long);
           continue;
-        case 10:
-          if (tag !== 82) {
-            break;
-          }
-
-          message.dataEventLocation = reader.string();
-          continue;
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -4902,7 +4890,6 @@ export const SegmentsInfo = {
       segmentCount: isSet(object.segmentCount) ? globalThis.Number(object.segmentCount) : 0,
       startedAt: isSet(object.startedAt) ? globalThis.Number(object.startedAt) : 0,
       endedAt: isSet(object.endedAt) ? globalThis.Number(object.endedAt) : 0,
-      dataEventLocation: isSet(object.dataEventLocation) ? globalThis.String(object.dataEventLocation) : "",
     };
   },
 
@@ -4935,9 +4922,6 @@ export const SegmentsInfo = {
     if (message.endedAt !== undefined && message.endedAt !== 0) {
       obj.endedAt = Math.round(message.endedAt);
     }
-    if (message.dataEventLocation !== undefined && message.dataEventLocation !== "") {
-      obj.dataEventLocation = message.dataEventLocation;
-    }
     return obj;
   },
 
@@ -4955,7 +4939,6 @@ export const SegmentsInfo = {
     message.segmentCount = object.segmentCount ?? 0;
     message.startedAt = object.startedAt ?? 0;
     message.endedAt = object.endedAt ?? 0;
-    message.dataEventLocation = object.dataEventLocation ?? "";
     return message;
   },
 };

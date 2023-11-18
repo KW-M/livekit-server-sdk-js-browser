@@ -17,33 +17,33 @@ export const protobufPackage = "livekit";
 export interface CreateRoomRequest {
   /** name of the room */
   name?:
-    | string
-    | undefined;
+  | string
+  | undefined;
   /** number of seconds to keep the room open if no one joins */
   emptyTimeout?:
-    | number
-    | undefined;
+  | number
+  | undefined;
   /** limit number of participants that can be in a room */
   maxParticipants?:
-    | number
-    | undefined;
+  | number
+  | undefined;
   /** override the node room is allocated to, for debugging */
   nodeId?:
-    | string
-    | undefined;
+  | string
+  | undefined;
   /** metadata of room */
   metadata?:
-    | string
-    | undefined;
+  | string
+  | undefined;
   /** egress */
   egress?:
-    | RoomEgress
-    | undefined;
+  | RoomEgress
+  | undefined;
   /** playout delay of subscriber */
   minPlayoutDelay?: number | undefined;
   maxPlayoutDelay?:
-    | number
-    | undefined;
+  | number
+  | undefined;
   /**
    * improves A/V sync when playout_delay set to a value larger than 200ms. It will disables transceiver re-use
    * so not recommended for rooms with frequent subscription changes
@@ -86,8 +86,8 @@ export interface ListParticipantsResponse {
 export interface RoomParticipantIdentity {
   /** name of the room */
   room?:
-    | string
-    | undefined;
+  | string
+  | undefined;
   /** identity of the participant */
   identity?: string | undefined;
 }
@@ -99,12 +99,12 @@ export interface MuteRoomTrackRequest {
   /** name of the room */
   room?: string | undefined;
   identity?:
-    | string
-    | undefined;
+  | string
+  | undefined;
   /** sid of the track to mute */
   trackSid?:
-    | string
-    | undefined;
+  | string
+  | undefined;
   /** set to true to mute, false to unmute */
   muted?: boolean | undefined;
 }
@@ -116,16 +116,16 @@ export interface MuteRoomTrackResponse {
 export interface UpdateParticipantRequest {
   room?: string | undefined;
   identity?:
-    | string
-    | undefined;
+  | string
+  | undefined;
   /** metadata to update. skipping updates if left empty */
   metadata?:
-    | string
-    | undefined;
+  | string
+  | undefined;
   /** set to update the participant's permissions */
   permission?:
-    | ParticipantPermission
-    | undefined;
+  | ParticipantPermission
+  | undefined;
   /** display name to update */
   name?: string | undefined;
 }
@@ -133,16 +133,16 @@ export interface UpdateParticipantRequest {
 export interface UpdateSubscriptionsRequest {
   room?: string | undefined;
   identity?:
-    | string
-    | undefined;
+  | string
+  | undefined;
   /** list of sids of tracks */
   trackSids?:
-    | string[]
-    | undefined;
+  | string[]
+  | undefined;
   /** set to true to subscribe, false to unsubscribe from tracks */
   subscribe?:
-    | boolean
-    | undefined;
+  | boolean
+  | undefined;
   /** list of participants and their tracks */
   participantTracks?: ParticipantTracks[] | undefined;
 }
@@ -155,16 +155,16 @@ export interface SendDataRequest {
   room?: string | undefined;
   data?: Uint8Array | undefined;
   kind?:
-    | DataPacket_Kind
-    | undefined;
+  | DataPacket_Kind
+  | undefined;
   /**
    * mark deprecated
    *
    * @deprecated
    */
   destinationSids?:
-    | string[]
-    | undefined;
+  | string[]
+  | undefined;
   /** when set, only forward to these identities */
   destinationIdentities?: string[] | undefined;
   topic?: string | undefined;
@@ -176,8 +176,8 @@ export interface SendDataResponse {
 
 export interface UpdateRoomMetadataRequest {
   room?:
-    | string
-    | undefined;
+  | string
+  | undefined;
   /** metadata to update. skipping updates if left empty */
   metadata?: string | undefined;
 }
@@ -1679,28 +1679,20 @@ export interface RoomService {
 }
 
 function bytesFromBase64(b64: string): Uint8Array {
-  if (globalThis.Buffer) {
-    return Uint8Array.from(globalThis.Buffer.from(b64, "base64"));
-  } else {
-    const bin = globalThis.atob(b64);
-    const arr = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; ++i) {
-      arr[i] = bin.charCodeAt(i);
-    }
-    return arr;
+  const bin = globalThis.atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; ++i) {
+    arr[i] = bin.charCodeAt(i);
   }
+  return arr;
 }
 
 function base64FromBytes(arr: Uint8Array): string {
-  if (globalThis.Buffer) {
-    return globalThis.Buffer.from(arr).toString("base64");
-  } else {
-    const bin: string[] = [];
-    arr.forEach((byte) => {
-      bin.push(globalThis.String.fromCharCode(byte));
-    });
-    return globalThis.btoa(bin.join(""));
-  }
+  const bin: string[] = [];
+  arr.forEach((byte) => {
+    bin.push(globalThis.String.fromCharCode(byte));
+  });
+  return globalThis.btoa(bin.join(""));
 }
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;

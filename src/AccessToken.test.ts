@@ -1,18 +1,18 @@
-import * as jwt from 'jsonwebtoken';
+import { jwtVerify } from 'jose';
 import { AccessToken, TokenVerifier } from './AccessToken';
 
 const testApiKey = 'abcdefg';
 const testSecret = 'abababa';
 
-describe('encoded tokens are valid', () => {
+describe('encoded tokens are valid', async () => {
   const t = new AccessToken(testApiKey, testSecret, {
     identity: 'me',
     name: 'myname',
   });
   t.addGrant({ room: 'myroom' });
-  const token = t.toJwt();
+  const token = await t.toJwt();
 
-  const decoded = <any>jwt.verify(token, testSecret, { jwtid: 'me' });
+  const decoded = <any>jwtVerify(token, new TextEncoder().encode(testSecret), { issuer: 'me' });
   it('can be decoded', () => {
     expect(decoded).not.toBe(undefined);
   });
@@ -45,13 +45,13 @@ describe('identity is required for only join grants', () => {
 });
 
 describe('verify token is valid', () => {
-  it('can decode encoded token', () => {
+  it('can decode encoded token', async () => {
     const t = new AccessToken(testApiKey, testSecret);
     t.sha256 = 'abcdefg';
     t.addGrant({ roomCreate: true });
 
     const v = new TokenVerifier(testApiKey, testSecret);
-    const decoded = v.verify(t.toJwt());
+    const decoded = await v.verify(await t.toJwt());
 
     expect(decoded).not.toBe(undefined);
     expect(decoded.sha256).toEqual('abcdefg');
@@ -60,7 +60,7 @@ describe('verify token is valid', () => {
 });
 
 describe('adding grants should not overwrite existing grants', () => {
-  it('should not overwrite existing grants', () => {
+  it('should not overwrite existing grants', async () => {
     const t = new AccessToken(testApiKey, testSecret, {
       identity: 'me',
       name: 'myname',
@@ -68,7 +68,9 @@ describe('adding grants should not overwrite existing grants', () => {
     t.addGrant({ roomCreate: true });
     t.addGrant({ roomJoin: true });
 
-    const decoded = <any>jwt.verify(t.toJwt(), testSecret, { jwtid: 'me' });
+    const decoded = <any>(
+      jwtVerify(await t.toJwt(), new TextEncoder().encode(testSecret), { issuer: 'me' })
+    );
     expect(decoded.video?.roomCreate).toBeTruthy();
     expect(decoded.video?.roomJoin).toBeTruthy();
   });
